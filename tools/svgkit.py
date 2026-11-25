@@ -23,33 +23,35 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets"
 OUT.mkdir(exist_ok=True)
 
+# GitHub's own Primer colours, so the art sits in the page instead of on it.
+# "ink" is the card surface (canvas.subtle), one step off the page itself.
 PALETTES = {
     "dark": {
-        "ink": "#141310",
-        "panel": "#1B1915",
-        "raised": "#23201B",
-        "bone": "#DCD6C9",
-        "muted": "#9B968D",
-        "accent": "#BAA276",
-        "accent2": "#8294AA",
-        "line": "#DCD6C9",
-        "line_op": 0.13,
-        # Section headings sit on GitHub's own page, not on ours.
-        "head_text": "#DCD6C9",
-        "head_accent": "#BAA276",
+        "ink": "#161B22",
+        "bone": "#E6EDF3",
+        "muted": "#9198A1",
+        "accent": "#4493F8",
+        "accent2": "#3FB950",
+        "line": "#3D444D",
+        "line_op": 1,
+        "head_text": "#E6EDF3",
+        "head_accent": "#4493F8",
+        # Contribution-graph greens, lightest to strongest.
+        "graph": ("#0E4429", "#006D32", "#26A641", "#39D353"),
+        "graph_empty": "#21262D",
     },
     "light": {
-        "ink": "#E4DCCB",
-        "panel": "#DDD4C1",
-        "raised": "#D5CBB5",
-        "bone": "#3C362E",
-        "muted": "#524B40",
-        "accent": "#6A511E",
-        "accent2": "#42576E",
-        "line": "#3C362E",
-        "line_op": 0.15,
-        "head_text": "#3C362E",
-        "head_accent": "#6A511E",
+        "ink": "#F6F8FA",
+        "bone": "#1F2328",
+        "muted": "#59636E",
+        "accent": "#0969DA",
+        "accent2": "#1A7F37",
+        "line": "#D1D9E0",
+        "line_op": 1,
+        "head_text": "#1F2328",
+        "head_accent": "#0969DA",
+        "graph": ("#9BE9A8", "#40C463", "#30A14E", "#216E39"),
+        "graph_empty": "#EFF2F5",
     },
 }
 

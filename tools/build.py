@@ -8,7 +8,7 @@ as part of the page rather than pasted onto it.
 
 The live activity card is drawn by stats.py, which a daily workflow runs.
 
-Colours match samarthvg.github.io (src/index.css in that repo).
+Colours are GitHub's own Primer palette (see svgkit.py).
 """
 
 import random
@@ -30,7 +30,7 @@ def banner(theme):
     parts.append(
         "<defs>"
         f'<radialGradient id="glow" cx="0.82" cy="0.18" r="0.7">'
-        f'<stop offset="0" stop-color="{p["accent"]}" stop-opacity="{0.14 if theme == "dark" else 0.16}"/>'
+        f'<stop offset="0" stop-color="{p["accent"]}" stop-opacity="{0.12 if theme == "dark" else 0.08}"/>'
         f'<stop offset="1" stop-color="{p["accent"]}" stop-opacity="0"/></radialGradient>'
         f'<linearGradient id="fade" x1="0" x2="1" y1="0" y2="0">'
         f'<stop offset="0" stop-color="{p["ink"]}" stop-opacity="1"/>'
@@ -42,13 +42,12 @@ def banner(theme):
     parts.append(f'<rect width="{W}" height="{H}" fill="{p["ink"]}"/>')
     parts.append(f'<rect width="{W}" height="{H}" fill="url(#glow)"/>')
 
-    # Three ridges, far to near. Each nearer one is darker and lower, the way
-    # haze works over real hills; they are drawn in the accent pigments rather
-    # than grey so they stay part of the same warm picture.
+    # Three ridges, far to near, each lower and denser, the way haze works over
+    # real hills. The motes above them take the contribution-graph green.
     layers = [
-        (7, H - 120, 120, p["accent2"], 0.10 if theme == "dark" else 0.13),
-        (3, H - 70, 110, p["accent"], 0.13 if theme == "dark" else 0.16),
-        (11, H - 22, 90, p["bone"], 0.07 if theme == "dark" else 0.08),
+        (7, H - 120, 120, p["accent"], 0.08 if theme == "dark" else 0.07),
+        (3, H - 70, 110, p["accent"], 0.12 if theme == "dark" else 0.10),
+        (11, H - 22, 90, p["bone"], 0.06 if theme == "dark" else 0.05),
     ]
     for i, (seed, base, amp, colour, op) in enumerate(layers):
         pts = ridge(seed, 0, W + 40, base, amp)

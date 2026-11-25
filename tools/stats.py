@@ -37,7 +37,7 @@ query($login: String!, $after: String) {
     }
     repositories(first: 100, after: $after, ownerAffiliations: OWNER, isFork: false) {
       pageInfo { hasNextPage endCursor }
-      nodes { languages(first: 20) { edges { size node { name } } } }
+      nodes { languages(first: 20) { edges { size node { name color } } } }
     }
   }
 }
@@ -58,15 +58,18 @@ def graphql(token: str, variables: dict) -> dict:
 
 
 def fetch(token: str) -> dict:
-    after, languages, first = None, Counter(), None
+    after, languages, colours, first = None, Counter(), {}, None
     while True:
         user = graphql(token, {"login": LOGIN, "after": after})
         first = first or user
         repos = user["repositories"]
         for repo in repos["nodes"]:
             for edge in repo["languages"]["edges"]:
-                name = MERGE.get(edge["node"]["name"], edge["node"]["name"])
+                raw = edge["node"]["name"]
+                name = MERGE.get(raw, raw)
                 languages[name] += edge["size"]
+                if name == raw and edge["node"]["color"]:
+                    colours[name] = edge["node"]["color"]
         if not repos["pageInfo"]["hasNextPage"]:
             break
         after = repos["pageInfo"]["endCursor"]
@@ -80,7 +83,8 @@ def fetch(token: str) -> dict:
         "best_week": max(weekly),
         "repos": collection["totalRepositoriesWithContributedCommits"],
         "weekly": weekly[-WEEKS:],
-        "languages": [(n, s / total) for n, s in languages.most_common(TOP_LANGUAGES)],
+        # GitHub's own language colours, the ones on every repository page.
+        "languages": [(n, s / total, colours.get(n)) for n, s in languages.most_common(TOP_LANGUAGES)],
         "as_of": days[-1]["date"],
     }
 
@@ -113,18 +117,18 @@ def activity(theme: str, s: dict) -> str:
     gap = 4
     bw = (split - 2 * x0 - gap * (WEEKS - 1)) / WEEKS
     peak = max(s["weekly"]) or 1
+    graph = p["graph"]
     for i, v in enumerate(s["weekly"]):
         x = x0 + i * (bw + gap)
         if v == 0:
             parts.append(
-                f'<rect x="{num(x)}" y="{bars_bottom - 2}" width="{num(bw)}" height="2" rx="1" '
-                f'fill="{p["bone"]}" fill-opacity="0.18"/>'
+                f'<rect x="{num(x)}" y="{bars_bottom - 3}" width="{num(bw)}" height="3" rx="1.5" fill="{p["graph_empty"]}"/>'
             )
             continue
         h = max(4, (bars_bottom - bars_top) * (v / peak) ** 0.7)
+        level = graph[min(len(graph) - 1, int(len(graph) * v / peak - 1e-9))]
         parts.append(
-            f'<rect x="{num(x)}" y="{num(bars_bottom - h)}" width="{num(bw)}" height="{num(h)}" rx="2" '
-            f'fill="{p["accent"]}" fill-opacity="{num(0.45 + 0.55 * v / peak)}"/>'
+            f'<rect x="{num(x)}" y="{num(bars_bottom - h)}" width="{num(bw)}" height="{num(h)}" rx="2" fill="{level}"/>'
         )
 
     # Right: languages by share of code.
@@ -133,7 +137,7 @@ def activity(theme: str, s: dict) -> str:
     parts.append(text(MONO, "LANGUAGES", 12.5, rx, 52, p["muted"], tracking=0.14))
     row = 46
     top_share = s["languages"][0][1] if s["languages"] else 1
-    for i, (name, share) in enumerate(s["languages"]):
+    for i, (name, share, colour) in enumerate(s["languages"]):
         y = 96 + i * row
         parts.append(text(MONO_MED, name, 14, rx, y, p["bone"], tracking=0.02))
         parts.append(text(MONO, f"{share * 100:.0f}%", 14, rx + rw, y, p["muted"], anchor="end"))
@@ -142,13 +146,13 @@ def activity(theme: str, s: dict) -> str:
         )
         parts.append(
             f'<rect x="{rx}" y="{y + 10}" width="{num(max(5, rw * share / top_share))}" height="5" rx="2.5" '
-            f'fill="{p["accent2"] if i else p["accent"]}"/>'
+            f'fill="{colour or p["accent"]}"/>'
         )
 
     stamp = dt.date.fromisoformat(s["as_of"]).strftime("UPDATED %d %b %Y").upper()
     parts.append(text(MONO, stamp, 10.5, W - 32, H - 22, p["muted"], tracking=0.14, anchor="end", opacity=0.8))
 
-    langs = ", ".join(f"{n} {sh * 100:.0f}%" for n, sh in s["languages"])
+    langs = ", ".join(f"{n} {sh * 100:.0f}%" for n, sh, _ in s["languages"])
     title = (
         f'{s["year"]} contributions in the past year, {s["best_week"]} in the busiest week, '
         f'commits to {s["repos"]} repositories. Languages: {langs}.'
