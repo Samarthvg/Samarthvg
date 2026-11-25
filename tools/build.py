@@ -19,7 +19,7 @@ Colours match samarthvg.github.io (src/index.css in that repo).
 import random
 
 from svgkit import (
-    MONO, MONO_MED, OUT, PALETTES, SERIF, SERIF_IT, card, num, ridge, ridge_path, svg, text,
+    MONO, MONO_MED, OUT, PALETTES, SERIF, SERIF_IT, num, ridge, ridge_path, svg, text,
 )
 
 
@@ -187,38 +187,6 @@ def footer(theme):
     return svg(W, H, "".join(parts), "")
 
 
-# Each figure is a result someone can check: a paper, a repo, or the résumé.
-NUMBERS = [
-    ("2,300+", "COMPANY JOB BOARDS", "ONWARD POLLS EVERY 30 MIN"),
-    ("2", "PAPERS ON ARXIV", "ENGINE LIFE · MUSIC AI"),
-    ("91.3%", "DEEPFAKE DETECTION", "ACCURACY ON 140K FACES"),
-    ("50+", "STAFF USE THE COGNITUS", "PLATFORM I WORKED ON"),
-    ("+34%", "NOTE-ONSET RECALL", "FROM A CUSTOM FOCAL LOSS"),
-    ("~14", "CYCLES OF ERROR ON", "TURBOFAN REMAINING LIFE"),
-]
-
-
-def numbers(theme):
-    p = PALETTES[theme]
-    W, H, cols = 840, 330, 3
-    cw, rh = W / cols, H / 2
-    parts = [card(p, W, H)]
-    for c in range(1, cols):
-        parts.append(
-            f'<line x1="{num(c * cw)}" y1="28" x2="{num(c * cw)}" y2="{H - 28}" '
-            f'stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
-        )
-    parts.append(
-        f'<line x1="28" y1="{rh}" x2="{W - 28}" y2="{rh}" stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
-    )
-    for i, (figure, l1, l2) in enumerate(NUMBERS):
-        x, y = (i % cols) * cw + 32, (i // cols) * rh
-        parts.append(text(SERIF, figure, 64, x - 2, y + 86, p["accent"]))
-        parts.append(text(MONO, l1, 12.5, x, y + 118, p["bone"], tracking=0.12))
-        parts.append(text(MONO, l2, 12.5, x, y + 138, p["muted"], tracking=0.12))
-    return svg(W, H, "".join(parts), "By the numbers: " + "; ".join(f"{a} {b} {c}".lower() for a, b, c in NUMBERS))
-
-
 TIMELINE = [
     ("2020", "Charotar Univ.", "ML RESEARCH INTERN"),
     ("2022–23", "Simform", "FULL STACK DEVELOPER"),
@@ -259,10 +227,9 @@ def timeline(theme):
 
 
 SECTIONS = [
-    ("numbers", "01", "By the numbers"),
-    ("work", "02", "Selected work"),
-    ("experience", "03", "Path so far"),
-    ("activity", "04", "On GitHub"),
+    ("work", "01", "Selected work"),
+    ("experience", "02", "Path so far"),
+    ("activity", "03", "On GitHub"),
 ]
 
 PILLS = [("portfolio", "PORTFOLIO"), ("linkedin", "LINKEDIN"), ("resume", "RÉSUMÉ")]
@@ -275,7 +242,6 @@ def main():
         files = {
             f"banner-{theme}.svg": banner(theme),
             f"footer-{theme}.svg": footer(theme),
-            f"numbers-{theme}.svg": numbers(theme),
             f"timeline-{theme}.svg": timeline(theme),
         }
         for slug, idx, title in SECTIONS:

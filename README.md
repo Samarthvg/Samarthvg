@@ -11,10 +11,6 @@
   <a href="https://samarthvg.github.io/resume.pdf"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pill-resume-dark.svg"><img src="assets/pill-resume-light.svg" height="40" alt="Résumé"></picture></a>
 </p>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="assets/h-numbers-dark.svg"><img src="assets/h-numbers-light.svg" width="100%" alt="By the numbers"></picture>
-
-<picture><source media="(prefers-color-scheme: dark)" srcset="assets/numbers-dark.svg"><img src="assets/numbers-light.svg" width="100%" alt="2,300+ company job boards polled by Onward every 30 minutes. 2 papers on arXiv. 91.3% deepfake detection accuracy on 140k faces. 50+ staff use the Cognitus platform I worked on. +34% note-onset recall from a custom focal loss. About 14 cycles of error predicting turbofan remaining life."></picture>
-
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/h-work-dark.svg"><img src="assets/h-work-light.svg" width="100%" alt="Selected work"></picture>
 
 <table>
