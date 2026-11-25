@@ -1,6 +1,6 @@
 """Draw assets/activity-{dark,light}.svg from live GitHub data.
 
-Run daily by .github/workflows/stats.yml, which commits the result only when
+Standard library only. Run daily by .github/workflows/stats.yml, which commits the result only when
 it changes. Locally:
 
     GH_TOKEN=$(gh auth token) python tools/stats.py
@@ -19,7 +19,7 @@ import os
 import urllib.request
 from collections import Counter
 
-from svgkit import MONO, MONO_MED, OUT, PALETTES, SERIF, card, num, svg, text
+from svgkit import MONO, MONO_MED, OUT, PALETTES, SANS_LIGHT, card, num, svg, text
 
 LOGIN = os.environ.get("STATS_LOGIN", "Samarthvg")
 WEEKS = 16
@@ -105,7 +105,7 @@ def activity(theme: str, s: dict) -> str:
     col = (split - 2 * x0) / 3
     for i, (figure, label) in enumerate(figures):
         x = x0 + i * col
-        parts.append(text(SERIF, figure, 54, x - 2, 120, p["accent"]))
+        parts.append(text(SANS_LIGHT, figure, 50, x - 2, 118, p["accent"]))
         parts.append(text(MONO, label, 11, x, 144, p["bone"], tracking=0.1))
 
     parts.append(text(MONO, f"WEEKLY, LAST {WEEKS} WEEKS", 12.5, x0, 196, p["muted"], tracking=0.14))

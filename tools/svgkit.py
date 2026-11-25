@@ -1,19 +1,25 @@
-"""Shared pieces for the profile art: palettes, text-to-outline shaping and
-the ridge generator. See build.py for why text is drawn as outlines."""
+"""Shared pieces for the profile art: palettes, text, cards and the ridge
+generator.
+
+Text is real SVG <text> set in GitHub's own font stacks, so each visitor sees
+the same system font the rest of GitHub uses (Segoe UI on Windows, San
+Francisco on macOS and iOS, Noto Sans or similar on Linux and Android).
+
+Layout sometimes needs to know how wide a run of text is, for example where
+a heading's rule starts. Widths are measured against Segoe UI and Consolas
+when they are installed, and otherwise estimated. System fonts differ by a
+few percent, so everything placed after measured text leaves room for that.
+"""
 
 from __future__ import annotations
 
 import math
 import random
+from functools import lru_cache
+from html import escape
 from pathlib import Path
 
-import uharfbuzz as hb
-from fontTools.pens.svgPathPen import SVGPathPen
-from fontTools.pens.transformPen import TransformPen
-from fontTools.ttLib import TTFont
-
 ROOT = Path(__file__).resolve().parent.parent
-FONTS = ROOT / "tools" / "fonts"
 OUT = ROOT / "assets"
 OUT.mkdir(exist_ok=True)
 
@@ -47,68 +53,85 @@ PALETTES = {
     },
 }
 
+# The same stacks github.com uses for its UI and for code.
+SANS_STACK = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif"
+MONO_STACK = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+
+
+class Font:
+    def __init__(self, family: str, weight: int, measure_file: str | None, fallback_em: float):
+        self.family = family
+        self.weight = weight
+        self.measure_file = measure_file
+        self.fallback_em = fallback_em
+
+    def measure(self, s: str, size: float, tracking: float = 0.0) -> float:
+        widths = _advances(self.measure_file)
+        if widths is None:
+            base = len(s) * self.fallback_em * size
+        else:
+            cmap, hmtx, upem = widths
+            base = sum(hmtx.get(cmap.get(ord(c), ".notdef"), (upem * self.fallback_em,))[0] for c in s) * size / upem
+        return base + tracking * size * max(len(s) - 1, 0)
+
+
+@lru_cache(maxsize=None)
+def _advances(filename: str | None):
+    """Advance widths from a locally installed font, or None if unavailable."""
+    if not filename:
+        return None
+    path = Path("C:/Windows/Fonts") / filename
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        return None
+    if not path.exists():
+        return None
+    tt = TTFont(path, lazy=True)
+    hmtx = {k: v for k, v in tt["hmtx"].metrics.items()}
+    return tt.getBestCmap(), hmtx, tt["head"].unitsPerEm
+
+
+SANS = Font(SANS_STACK, 400, "segoeui.ttf", 0.55)
+SANS_LIGHT = Font(SANS_STACK, 300, "segoeuil.ttf", 0.53)
+SANS_SEMI = Font(SANS_STACK, 600, "seguisb.ttf", 0.57)
+# Monospace is estimated at 0.6em, the widest of the common system monos
+# (SF Mono, Menlo), so nothing placed after it can collide on any platform.
+MONO = Font(MONO_STACK, 400, None, 0.6)
+MONO_MED = Font(MONO_STACK, 600, None, 0.6)
+
+REDUCED_MOTION = "@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }"
+
 
 def num(v: float) -> str:
     s = f"{v:.1f}"
     return s.rstrip("0").rstrip(".") if "." in s else s
 
 
-class Face:
-    def __init__(self, filename: str, wght: float | None = None):
-        path = FONTS / filename
-        self.tt = TTFont(path)
-        self.upem = self.tt["head"].unitsPerEm
-        self.hb_font = hb.Font(hb.Face(hb.Blob.from_file_path(str(path))))
-        location = {}
-        if wght is not None:
-            self.hb_font.set_variations({"wght": wght})
-            location = {"wght": wght}
-        self.glyphs = self.tt.getGlyphSet(location=location or None)
-        self.order = self.tt.getGlyphOrder()
-
-    def measure(self, text: str, size: float, tracking: float = 0.0) -> float:
-        return self._shape(text, size, tracking)[1]
-
-    def _shape(self, text, size, tracking):
-        buf = hb.Buffer()
-        buf.add_str(text)
-        buf.guess_segment_properties()
-        hb.shape(self.hb_font, buf, {"kern": True, "liga": True})
-        scale = size / self.upem
-        placed, x = [], 0.0
-        for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
-            placed.append((self.order[info.codepoint], x + pos.x_offset * scale, pos.y_offset * scale))
-            x += pos.x_advance * scale + tracking * size
-        width = x - (tracking * size if placed else 0)
-        return placed, width, scale
-
-    def path(self, text, size, x, y, tracking=0.0, anchor="start") -> tuple[str, float]:
-        """Return (path data, advance width) for text whose baseline starts at (x, y)."""
-        placed, width, scale = self._shape(text, size, tracking)
-        if anchor == "end":
-            x -= width
-        elif anchor == "middle":
-            x -= width / 2
-        pen = SVGPathPen(self.glyphs, ntos=num)
-        for name, gx, gy in placed:
-            self.glyphs[name].draw(TransformPen(pen, (scale, 0, 0, -scale, x + gx, y - gy)))
-        return pen.getCommands(), width
-
-
-SERIF = Face("InstrumentSerif-Regular.ttf")
-SERIF_IT = Face("InstrumentSerif-Italic.ttf")
-MONO = Face("JetBrainsMono.ttf", wght=450)
-MONO_MED = Face("JetBrainsMono.ttf", wght=550)
-
-REDUCED_MOTION = "@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }"
-
-
 def svg(w, h, body, title, style=""):
     style_block = f"<style>{style}{REDUCED_MOTION}</style>" if style else ""
+    t = escape(title)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
-        f'role="img" aria-label="{title}"><title>{title}</title>{style_block}{body}</svg>\n'
+        f'role="img" aria-label="{t}"><title>{t}</title>{style_block}{body}</svg>\n'
     )
+
+
+def text(font: Font, s, size, x, y, fill, tracking=0.0, anchor="start", opacity=None):
+    attrs = [
+        f'x="{num(x)}" y="{num(y)}"',
+        f'font-family="{font.family}"',
+        f'font-size="{num(size)}"',
+        f'font-weight="{font.weight}"',
+        f'fill="{fill}"',
+    ]
+    if tracking:
+        attrs.append(f'letter-spacing="{num(tracking * size)}"')
+    if anchor != "start":
+        attrs.append(f'text-anchor="{anchor}"')
+    if opacity is not None:
+        attrs.append(f'fill-opacity="{opacity}"')
+    return f"<text {' '.join(attrs)}>{escape(s)}</text>"
 
 
 def ridge(seed, x0, x1, base, amp, step=5, octaves=((430, 1.0), (180, 0.42), (75, 0.1))):
@@ -141,9 +164,3 @@ def card(p, w, h, radius=18):
         f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="{radius - 0.5}" fill="none" '
         f'stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
     )
-
-
-def text(face, s, size, x, y, fill, tracking=0.0, anchor="start", opacity=None):
-    d, _ = face.path(s, size, x, y, tracking=tracking, anchor=anchor)
-    op = f' fill-opacity="{opacity}"' if opacity is not None else ""
-    return f'<path d="{d}" fill="{fill}"{op}/>'

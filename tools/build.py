@@ -1,15 +1,10 @@
 """Render the profile's SVG assets: the banner, section headings, link pills
 and the footer, each in a dark and a light variant.
 
-GitHub serves SVGs through <img>, which cannot load web fonts, so every piece
-of text is shaped with HarfBuzz and written out as outlines. The result looks
-the same on every machine and needs nothing at view time.
+Text uses GitHub's own system font stacks (see svgkit.py), so the art reads
+as part of the page rather than pasted onto it.
 
-    pip install fonttools uharfbuzz
-    python tools/build.py
-
-Fonts live in tools/fonts: Instrument Serif and JetBrains Mono, both under
-the SIL Open Font License (texts alongside them).
+    python tools/build.py      # fontTools, if installed, sharpens measuring
 
 The live activity card is drawn by stats.py, which a daily workflow runs.
 
@@ -21,7 +16,8 @@ import re
 from pathlib import Path
 
 from svgkit import (
-    MONO, MONO_MED, OUT, PALETTES, SERIF, SERIF_IT, card, num, ridge, ridge_path, svg, text,
+    MONO, MONO_MED, MONO_STACK, OUT, PALETTES, SANS, SANS_SEMI, SANS_STACK,
+    card, num, ridge, ridge_path, svg, text,
 )
 
 
@@ -78,35 +74,30 @@ def banner(theme):
         )
 
     # Top row.
-    d, _ = MONO.path("SOFTWARE ENGINEER  ·  ML / GEN AI", 17, pad, 78, tracking=0.22)
-    parts.append(f'<path d="{d}" fill="{p["muted"]}"/>')
-    d, _ = MONO.path("BOSTON, MA", 17, W - pad, 78, tracking=0.22, anchor="end")
-    parts.append(f'<path d="{d}" fill="{p["muted"]}"/>')
+    parts.append(text(MONO, "SOFTWARE ENGINEER · ML / GEN AI", 16, pad, 78, p["muted"], tracking=0.16))
+    parts.append(text(MONO, "BOSTON, MA", 16, W - pad, 78, p["muted"], tracking=0.16, anchor="end"))
 
-    # Name.
-    size = 132
-    d1, w1 = SERIF.path("Samarth", size, pad - 4, 222)
-    gap = size * 0.24
-    d2, _ = SERIF_IT.path("Galchar", size, pad - 4 + w1 + gap, 222)
-    parts.append(f'<path d="{d1}" fill="{p["bone"]}"/>')
-    parts.append(f'<path d="{d2}" fill="{p["accent"]}"/>')
+    # Name: one run of text, so the gap between the words is the font's own
+    # and nothing depends on knowing how wide "Samarth" is.
+    parts.append(
+        f'<text x="{pad - 4}" y="214" font-family="{SANS_STACK}" font-size="104" letter-spacing="-2.5">'
+        f'<tspan font-weight="600" fill="{p["bone"]}">Samarth</tspan> '
+        f'<tspan font-weight="300" fill="{p["accent"]}">Galchar</tspan></text>'
+    )
 
     # Tagline.
-    d, _ = SERIF_IT.path(
-        "Full-stack products and applied machine learning,", 32, pad, 284
-    )
-    parts.append(f'<path d="{d}" fill="{p["muted"]}"/>')
-    d, _ = SERIF_IT.path("and most of what I build sits between the two.", 32, pad, 324)
-    parts.append(f'<path d="{d}" fill="{p["muted"]}"/>')
+    parts.append(text(SANS, "Full-stack products and applied machine learning,", 28, pad, 272, p["muted"]))
+    parts.append(text(SANS, "and most of what I build sits between the two.", 28, pad, 310, p["muted"]))
 
     # Status line with a breathing dot.
-    sy = 372
+    sy = 368
     parts.append(f'<circle cx="{pad + 5}" cy="{sy - 5}" r="9" fill="{p["accent"]}" class="halo"/>')
     parts.append(f'<circle cx="{pad + 5}" cy="{sy - 5}" r="5" fill="{p["accent"]}"/>')
-    d, w = MONO_MED.path("OPEN TO FULL-TIME ROLES", 16, pad + 24, sy, tracking=0.2)
-    parts.append(f'<path d="{d}" fill="{p["bone"]}"/>')
-    d, _ = MONO.path("·  M.S. CS, NORTHEASTERN '26", 16, pad + 24 + w + 18, sy, tracking=0.2)
-    parts.append(f'<path d="{d}" fill="{p["muted"]}"/>')
+    parts.append(
+        f'<text x="{pad + 24}" y="{sy}" font-family="{MONO_STACK}" font-size="15" letter-spacing="2.4">'
+        f'<tspan font-weight="600" fill="{p["bone"]}">OPEN TO FULL-TIME ROLES</tspan>'
+        f'<tspan fill="{p["muted"]}"> · M.S. CS, NORTHEASTERN &#8217;26</tspan></text>'
+    )
 
     parts.append("</g>")
     parts.append(
@@ -134,22 +125,21 @@ def heading(theme, index, title):
     W, H = 840, 66
     base = 46
     parts = []
-    d, wi = MONO_MED.path(index, 15, 0, base - 3, tracking=0.12)
-    parts.append(f'<path d="{d}" fill="{p["head_accent"]}"/>')
-    d, wt = SERIF.path(title, 40, 42, base)
-    parts.append(f'<path d="{d}" fill="{p["head_text"]}"/>')
-    x = 42 + wt + 24
+    parts.append(text(MONO_MED, index, 14, 0, base - 2, p["head_accent"], tracking=0.1))
+    parts.append(text(SANS_SEMI, title, 30, 36, base, p["head_text"]))
+    # Measured against Segoe UI; the margin absorbs wider system fonts.
+    x = 36 + SANS_SEMI.measure(title, 30) * 1.08 + 20
     parts.append(
-        f'<line x1="{num(x)}" y1="{base - 11}" x2="{W}" y2="{base - 11}" '
+        f'<line x1="{num(x)}" y1="{base - 10}" x2="{W}" y2="{base - 10}" '
         f'stroke="{p["head_text"]}" stroke-opacity="{0.22 if theme == "dark" else 0.25}" stroke-width="1.5"/>'
     )
-    parts.append(f'<circle cx="{num(x)}" cy="{base - 11}" r="3" fill="{p["head_accent"]}"/>')
+    parts.append(f'<circle cx="{num(x)}" cy="{base - 10}" r="3" fill="{p["head_accent"]}"/>')
     return svg(W, H, "".join(parts), title)
 
 
 def pill(theme, label):
     p = PALETTES[theme]
-    size, track = 15, 0.18
+    size, track = 14, 0.14
     text_w = MONO_MED.measure(label, size, track)
     arrow = 16
     W = int(text_w + arrow + 14 + 2 * 26)
@@ -158,8 +148,7 @@ def pill(theme, label):
         f'<rect x="0.75" y="0.75" width="{W - 1.5}" height="{H - 1.5}" rx="{(H - 1.5) / 2}" '
         f'fill="{p["ink"]}" stroke="{p["accent"]}" stroke-opacity="0.55" stroke-width="1.5"/>'
     ]
-    d, _ = MONO_MED.path(label, size, 26, 29.5, tracking=track)
-    parts.append(f'<path d="{d}" fill="{p["bone"]}"/>')
+    parts.append(text(MONO_MED, label, size, 26, 29, p["bone"], tracking=track))
     ax = 26 + text_w + 14
     parts.append(
         f'<path d="M{num(ax)} {H / 2 + 6}L{num(ax + 11)} {H / 2 - 5}M{num(ax + 2)} {H / 2 - 5}H{num(ax + 11)}V{H / 2 + 4}" '
@@ -242,15 +231,15 @@ def timeline(theme):
     for i, (when, where, what) in enumerate(TIMELINE):
         x = i * step + 6
         last = i == len(TIMELINE) - 1
-        parts.append(text(MONO_MED, when, 14, x - 6, line_y - 20, accent, tracking=0.1))
+        parts.append(text(MONO_MED, when, 13, x - 6, line_y - 20, accent, tracking=0.1))
         if last:
             parts.append(f'<circle cx="{x}" cy="{line_y}" r="11" fill="{accent}" fill-opacity="0.2" class="halo"/>')
         parts.append(
             f'<circle cx="{x}" cy="{line_y}" r="5.5" fill="{accent if last else PALETTES[theme]["head_text"]}" '
             f'fill-opacity="{1 if last else 0.85}"/>'
         )
-        parts.append(text(SERIF, where, 30, x - 6, line_y + 50, ink))
-        parts.append(text(MONO, what, 12, x - 6, line_y + 74, ink, tracking=0.1, opacity=0.7))
+        parts.append(text(SANS_SEMI, where, 22, x - 6, line_y + 46, ink))
+        parts.append(text(MONO, what, 11.5, x - 6, line_y + 70, ink, tracking=0.08, opacity=0.7))
     style = (
         ".halo{animation:breathe 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}"
         "@keyframes breathe{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1.3)}}"
