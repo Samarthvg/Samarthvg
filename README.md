@@ -1,7 +1,7 @@
 <a href="https://samarthvg.github.io/">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
-    <img src="assets/banner-light.svg" width="100%" alt="Samarth Galchar. Software engineer, ML and generative AI. Boston, MA. Open to full-time roles.">
+    <img src="assets/banner-light.svg" width="100%" alt="Samarth Galchar. Software engineer, ML and generative AI. Boston, MA. Open to full-time roles. M.S. CS, Northeastern 2026.">
   </picture>
 </a>
 
@@ -11,43 +11,37 @@
   <a href="https://samarthvg.github.io/resume.pdf"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/pill-resume-dark.svg"><img src="assets/pill-resume-light.svg" height="40" alt="Résumé"></picture></a>
 </p>
 
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/stack-dark.svg"><img src="assets/stack-light.svg" width="100%" alt="Stack: Python, TypeScript, JavaScript, React, Node.js, FastAPI, PyTorch, TensorFlow, LangChain, PostgreSQL, MongoDB, Docker, Google Cloud, AWS, Cloudflare, Git"></picture>
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/h-work-dark.svg"><img src="assets/h-work-light.svg" width="100%" alt="Selected work"></picture>
 
 <table>
   <tr>
-    <td width="50%" valign="top">
+    <td width="33%" valign="top">
       <a href="https://github.com/Samarthvg/Onward"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/onward-dark.webp"><img src="assets/shots/onward-light.webp" width="100%" alt="Onward's dashboard of fresh postings with match scores"></picture></a>
-      <br><b><a href="https://github.com/Samarthvg/Onward">Onward</a></b> · finds the job, fills the form, you press Submit
-      <br><sub><code>Python</code> <code>SQLite</code> <code>WebExtensions</code></sub>
+      <br><b><a href="https://github.com/Samarthvg/Onward">Onward</a></b><br><sub>finds jobs, fills applications</sub>
     </td>
-    <td width="50%" valign="top">
-      <a href="https://farmhouse.samarthg.workers.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/farmhouse-dark.webp"><img src="assets/shots/farmhouse-light.webp" width="100%" alt="Farm Ledger's Hindi-first entry screens and owner dashboard"></picture></a>
-      <br><b><a href="https://farmhouse.samarthg.workers.dev">Farm Ledger</a></b> · offline-first farm books, Hindi by default
-      <br><sub><code>React</code> <code>Hono</code> <code>Cloudflare D1</code></sub>
+    <td width="33%" valign="top">
+      <a href="https://farmhouse.samarthg.workers.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/farmhouse-dark.webp"><img src="assets/shots/farmhouse-light.webp" width="100%" alt="Farm Ledger's Hindi-first entry screens and dashboard"></picture></a>
+      <br><b><a href="https://farmhouse.samarthg.workers.dev">Farm Ledger</a></b><br><sub>offline farm books, in Hindi</sub>
     </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://arxiv.org/abs/2604.27234"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/cmapss-dark.webp"><img src="assets/shots/cmapss-light.webp" width="100%" alt="Predicted and true remaining life of turbofan engines"></picture></a>
-      <br><b><a href="https://arxiv.org/abs/2604.27234">Turbofan remaining life</a></b> · arXiv:2604.27234
-      <br><sub><code>PyTorch</code> <code>LSTM</code> <code>XGBoost</code></sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://arxiv.org/abs/2412.06703"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/music-dark.webp"><img src="assets/shots/music-light.webp" width="100%" alt="Piano spectrogram with detected note onsets"></picture></a>
-      <br><b><a href="https://arxiv.org/abs/2412.06703">Music transcription</a></b> · arXiv:2412.06703
-      <br><sub><code>TensorFlow</code> <code>Librosa</code></sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
+    <td width="33%" valign="top">
       <picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/vision-dark.webp"><img src="assets/shots/vision-light.webp" width="100%" alt="Frequency spectra of real and generated faces"></picture>
-      <br><b>Deepfake detection</b> · spotting fakes in the frequency domain
-      <br><sub><code>PyTorch</code> <code>OpenCV</code> <code>FFT</code></sub>
+      <br><b>Deepfake detection</b><br><sub>91.3% on 140k faces</sub>
     </td>
-    <td width="50%" valign="top">
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="https://arxiv.org/abs/2604.27234"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/cmapss-dark.webp"><img src="assets/shots/cmapss-light.webp" width="100%" alt="Predicted and true remaining life of turbofan engines"></picture></a>
+      <br><b><a href="https://arxiv.org/abs/2604.27234">Turbofan life</a></b><br><sub>arXiv paper · LSTM</sub>
+    </td>
+    <td width="33%" valign="top">
+      <a href="https://arxiv.org/abs/2412.06703"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/music-dark.webp"><img src="assets/shots/music-light.webp" width="100%" alt="Piano spectrogram with detected note onsets"></picture></a>
+      <br><b><a href="https://arxiv.org/abs/2412.06703">Music transcription</a></b><br><sub>arXiv paper · audio ML</sub>
+    </td>
+    <td width="33%" valign="top">
       <a href="https://github.com/Samarthvg/kanbas-react-web-app"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/shots/kanbas-dark.webp"><img src="assets/shots/kanbas-light.webp" width="100%" alt="Kanbas course dashboard"></picture></a>
-      <br><b><a href="https://github.com/Samarthvg/kanbas-react-web-app">Kanbas LMS</a></b> · a learning platform with role-based access
-      <br><sub><code>React</code> <code>Node.js</code> <code>MongoDB</code></sub>
+      <br><b><a href="https://github.com/Samarthvg/kanbas-react-web-app">Kanbas LMS</a></b><br><sub>MERN learning platform</sub>
     </td>
   </tr>
 </table>

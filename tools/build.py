@@ -17,9 +17,11 @@ Colours match samarthvg.github.io (src/index.css in that repo).
 """
 
 import random
+import re
+from pathlib import Path
 
 from svgkit import (
-    MONO, MONO_MED, OUT, PALETTES, SERIF, SERIF_IT, num, ridge, ridge_path, svg, text,
+    MONO, MONO_MED, OUT, PALETTES, SERIF, SERIF_IT, card, num, ridge, ridge_path, svg, text,
 )
 
 
@@ -101,8 +103,10 @@ def banner(theme):
     sy = 372
     parts.append(f'<circle cx="{pad + 5}" cy="{sy - 5}" r="9" fill="{p["accent"]}" class="halo"/>')
     parts.append(f'<circle cx="{pad + 5}" cy="{sy - 5}" r="5" fill="{p["accent"]}"/>')
-    d, _ = MONO_MED.path("OPEN TO FULL-TIME ROLES", 16, pad + 24, sy, tracking=0.2)
+    d, w = MONO_MED.path("OPEN TO FULL-TIME ROLES", 16, pad + 24, sy, tracking=0.2)
     parts.append(f'<path d="{d}" fill="{p["bone"]}"/>')
+    d, _ = MONO.path("·  M.S. CS, NORTHEASTERN '26", 16, pad + 24 + w + 18, sy, tracking=0.2)
+    parts.append(f'<path d="{d}" fill="{p["muted"]}"/>')
 
     parts.append("</g>")
     parts.append(
@@ -127,19 +131,19 @@ def heading(theme, index, title):
     p = PALETTES[theme]
     # 840 wide is roughly GitHub's README column, so on desktop the heading
     # draws near 1:1, and on a phone it shrinks far less than a 1280 one would.
-    W, H = 840, 84
-    base = 58
+    W, H = 840, 66
+    base = 46
     parts = []
-    d, wi = MONO_MED.path(index, 17, 0, base - 4, tracking=0.12)
+    d, wi = MONO_MED.path(index, 15, 0, base - 3, tracking=0.12)
     parts.append(f'<path d="{d}" fill="{p["head_accent"]}"/>')
-    d, wt = SERIF.path(title, 50, 48, base)
+    d, wt = SERIF.path(title, 40, 42, base)
     parts.append(f'<path d="{d}" fill="{p["head_text"]}"/>')
-    x = 48 + wt + 28
+    x = 42 + wt + 24
     parts.append(
-        f'<line x1="{num(x)}" y1="{base - 13}" x2="{W}" y2="{base - 13}" '
+        f'<line x1="{num(x)}" y1="{base - 11}" x2="{W}" y2="{base - 11}" '
         f'stroke="{p["head_text"]}" stroke-opacity="{0.22 if theme == "dark" else 0.25}" stroke-width="1.5"/>'
     )
-    parts.append(f'<circle cx="{num(x)}" cy="{base - 13}" r="3.5" fill="{p["head_accent"]}"/>')
+    parts.append(f'<circle cx="{num(x)}" cy="{base - 11}" r="3" fill="{p["head_accent"]}"/>')
     return svg(W, H, "".join(parts), title)
 
 
@@ -185,6 +189,35 @@ def footer(theme):
         )
     parts.append("</g>")
     return svg(W, H, "".join(parts), "")
+
+
+# Logos are Simple Icons (CC0), saved in tools/icons. Order is roughly how
+# much of the work above each one carries.
+STACK = [
+    ("python", "Python"), ("typescript", "TypeScript"), ("javascript", "JavaScript"),
+    ("react", "React"), ("nodedotjs", "Node.js"), ("fastapi", "FastAPI"),
+    ("pytorch", "PyTorch"), ("tensorflow", "TensorFlow"), ("langchain", "LangChain"),
+    ("postgresql", "PostgreSQL"), ("mongodb", "MongoDB"), ("docker", "Docker"),
+    ("googlecloud", "Google Cloud"), ("amazonwebservices", "AWS"), ("cloudflare", "Cloudflare"),
+    ("git", "Git"),
+]
+ICONS = Path(__file__).resolve().parent / "icons"
+
+
+def stack(theme):
+    p = PALETTES[theme]
+    W, H, pad, icon = 840, 76, 30, 26
+    cell = (W - 2 * pad) / len(STACK)
+    parts = [card(p, W, H, radius=14)]
+    for i, (slug, _) in enumerate(STACK):
+        d = re.search(r' d="([^"]+)"', (ICONS / f"{slug}.svg").read_text(encoding="utf-8")).group(1)
+        x = pad + i * cell + (cell - icon) / 2
+        y = (H - icon) / 2
+        parts.append(
+            f'<path transform="translate({num(x)} {num(y)}) scale({icon / 24})" d="{d}" '
+            f'fill="{p["accent"] if i < 3 else p["bone"]}" fill-opacity="{1 if i < 3 else 0.8}"/>'
+        )
+    return svg(W, H, "".join(parts), "Stack: " + ", ".join(n for _, n in STACK))
 
 
 TIMELINE = [
@@ -243,6 +276,7 @@ def main():
             f"banner-{theme}.svg": banner(theme),
             f"footer-{theme}.svg": footer(theme),
             f"timeline-{theme}.svg": timeline(theme),
+            f"stack-{theme}.svg": stack(theme),
         }
         for slug, idx, title in SECTIONS:
             files[f"h-{slug}-{theme}.svg"] = heading(theme, idx, title)
