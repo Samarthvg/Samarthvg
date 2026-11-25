@@ -8,144 +8,19 @@ the same on every machine and needs nothing at view time.
     pip install fonttools uharfbuzz
     python tools/build.py
 
-Fonts are read from tools/fonts (git-ignored). They are OFL and come from
-github.com/google/fonts: ofl/instrumentserif/InstrumentSerif-Regular.ttf,
-ofl/instrumentserif/InstrumentSerif-Italic.ttf and
-ofl/jetbrainsmono/JetBrainsMono[wght].ttf (saved as JetBrainsMono.ttf).
+Fonts live in tools/fonts: Instrument Serif and JetBrains Mono, both under
+the SIL Open Font License (texts alongside them).
+
+The live activity card is drawn by stats.py, which a daily workflow runs.
 
 Colours match samarthvg.github.io (src/index.css in that repo).
 """
 
-from __future__ import annotations
-
-import math
 import random
-from pathlib import Path
 
-import uharfbuzz as hb
-from fontTools.pens.svgPathPen import SVGPathPen
-from fontTools.pens.transformPen import TransformPen
-from fontTools.ttLib import TTFont
-
-ROOT = Path(__file__).resolve().parent.parent
-FONTS = ROOT / "tools" / "fonts"
-OUT = ROOT / "assets"
-
-PALETTES = {
-    "dark": {
-        "ink": "#141310",
-        "panel": "#1B1915",
-        "raised": "#23201B",
-        "bone": "#DCD6C9",
-        "muted": "#9B968D",
-        "accent": "#BAA276",
-        "accent2": "#8294AA",
-        "line": "#DCD6C9",
-        "line_op": 0.13,
-        # Section headings sit on GitHub's own page, not on ours.
-        "head_text": "#DCD6C9",
-        "head_accent": "#BAA276",
-    },
-    "light": {
-        "ink": "#E4DCCB",
-        "panel": "#DDD4C1",
-        "raised": "#D5CBB5",
-        "bone": "#3C362E",
-        "muted": "#524B40",
-        "accent": "#6A511E",
-        "accent2": "#42576E",
-        "line": "#3C362E",
-        "line_op": 0.15,
-        "head_text": "#3C362E",
-        "head_accent": "#6A511E",
-    },
-}
-
-
-def num(v: float) -> str:
-    s = f"{v:.1f}"
-    return s.rstrip("0").rstrip(".") if "." in s else s
-
-
-class Face:
-    def __init__(self, filename: str, wght: float | None = None):
-        path = FONTS / filename
-        self.tt = TTFont(path)
-        self.upem = self.tt["head"].unitsPerEm
-        self.hb_font = hb.Font(hb.Face(hb.Blob.from_file_path(str(path))))
-        location = {}
-        if wght is not None:
-            self.hb_font.set_variations({"wght": wght})
-            location = {"wght": wght}
-        self.glyphs = self.tt.getGlyphSet(location=location or None)
-        self.order = self.tt.getGlyphOrder()
-
-    def measure(self, text: str, size: float, tracking: float = 0.0) -> float:
-        return self._shape(text, size, tracking)[1]
-
-    def _shape(self, text, size, tracking):
-        buf = hb.Buffer()
-        buf.add_str(text)
-        buf.guess_segment_properties()
-        hb.shape(self.hb_font, buf, {"kern": True, "liga": True})
-        scale = size / self.upem
-        placed, x = [], 0.0
-        for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
-            placed.append((self.order[info.codepoint], x + pos.x_offset * scale, pos.y_offset * scale))
-            x += pos.x_advance * scale + tracking * size
-        width = x - (tracking * size if placed else 0)
-        return placed, width, scale
-
-    def path(self, text, size, x, y, tracking=0.0, anchor="start") -> tuple[str, float]:
-        """Return (path data, advance width) for text whose baseline starts at (x, y)."""
-        placed, width, scale = self._shape(text, size, tracking)
-        if anchor == "end":
-            x -= width
-        elif anchor == "middle":
-            x -= width / 2
-        pen = SVGPathPen(self.glyphs, ntos=num)
-        for name, gx, gy in placed:
-            self.glyphs[name].draw(TransformPen(pen, (scale, 0, 0, -scale, x + gx, y - gy)))
-        return pen.getCommands(), width
-
-
-SERIF = Face("InstrumentSerif-Regular.ttf")
-SERIF_IT = Face("InstrumentSerif-Italic.ttf")
-MONO = Face("JetBrainsMono.ttf", wght=450)
-MONO_MED = Face("JetBrainsMono.ttf", wght=550)
-
-REDUCED_MOTION = "@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }"
-
-
-def svg(w, h, body, title, style=""):
-    style_block = f"<style>{style}{REDUCED_MOTION}</style>" if style else ""
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
-        f'role="img" aria-label="{title}"><title>{title}</title>{style_block}{body}</svg>\n'
-    )
-
-
-def ridge(seed, x0, x1, base, amp, step=5, octaves=((430, 1.0), (180, 0.42), (75, 0.1))):
-    """A smooth mountain line from x0 to x1, built from a few sine octaves."""
-    rnd = random.Random(seed)
-    phases = [(wl, a, rnd.uniform(0, math.tau)) for wl, a in octaves]
-    pts = []
-    x = x0
-    while x <= x1 + step:
-        # The broadest octave is folded (1 - 2|sin|) so the hills come to
-        # peaks instead of rolling like waves.
-        y = 0.0
-        for k, (wl, a, ph) in enumerate(phases):
-            s = math.sin(x / wl * math.tau / (2 if k == 0 else 1) + ph)
-            y += a * ((1 - 2 * abs(s)) if k == 0 else s)
-        pts.append((x, base - amp * (0.5 + 0.5 * y / sum(a for _, a, _ in phases))))
-        x += step
-    return pts
-
-
-def ridge_path(pts, floor):
-    d = f"M{num(pts[0][0])} {num(floor)}L" + " ".join(f"{num(x)} {num(y)}" for x, y in pts)
-    return d + f"L{num(pts[-1][0])} {num(floor)}Z"
+from svgkit import (
+    MONO, MONO_MED, OUT, PALETTES, SERIF, SERIF_IT, card, num, ridge, ridge_path, svg, text,
+)
 
 
 def banner(theme):
@@ -312,21 +187,97 @@ def footer(theme):
     return svg(W, H, "".join(parts), "")
 
 
+# Each figure is a result someone can check: a paper, a repo, or the résumé.
+NUMBERS = [
+    ("2,300+", "COMPANY JOB BOARDS", "ONWARD POLLS EVERY 30 MIN"),
+    ("2", "PAPERS ON ARXIV", "ENGINE LIFE · MUSIC AI"),
+    ("91.3%", "DEEPFAKE DETECTION", "ACCURACY ON 140K FACES"),
+    ("50+", "STAFF USE THE COGNITUS", "PLATFORM I WORKED ON"),
+    ("+34%", "NOTE-ONSET RECALL", "FROM A CUSTOM FOCAL LOSS"),
+    ("~14", "CYCLES OF ERROR ON", "TURBOFAN REMAINING LIFE"),
+]
+
+
+def numbers(theme):
+    p = PALETTES[theme]
+    W, H, cols = 840, 330, 3
+    cw, rh = W / cols, H / 2
+    parts = [card(p, W, H)]
+    for c in range(1, cols):
+        parts.append(
+            f'<line x1="{num(c * cw)}" y1="28" x2="{num(c * cw)}" y2="{H - 28}" '
+            f'stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
+        )
+    parts.append(
+        f'<line x1="28" y1="{rh}" x2="{W - 28}" y2="{rh}" stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
+    )
+    for i, (figure, l1, l2) in enumerate(NUMBERS):
+        x, y = (i % cols) * cw + 32, (i // cols) * rh
+        parts.append(text(SERIF, figure, 64, x - 2, y + 86, p["accent"]))
+        parts.append(text(MONO, l1, 12.5, x, y + 118, p["bone"], tracking=0.12))
+        parts.append(text(MONO, l2, 12.5, x, y + 138, p["muted"], tracking=0.12))
+    return svg(W, H, "".join(parts), "By the numbers: " + "; ".join(f"{a} {b} {c}".lower() for a, b, c in NUMBERS))
+
+
+TIMELINE = [
+    ("2020", "Charotar Univ.", "ML RESEARCH INTERN"),
+    ("2022–23", "Simform", "FULL STACK DEVELOPER"),
+    ("2025–26", "Cognitus", "FULL STACK INTERN"),
+    ("2026", "Northeastern", "M.S. COMPUTER SCIENCE"),
+]
+
+
+def timeline(theme):
+    p = PALETTES[theme]
+    W, H = 840, 150
+    line_y, step = 52, 210
+    ink, accent = p["head_text"], p["head_accent"]
+    parts = [
+        f'<line x1="6" y1="{line_y}" x2="{3 * step + 6}" y2="{line_y}" stroke="{ink}" stroke-opacity="0.3" stroke-width="1.5"/>',
+        # What comes next: the line keeps going, dashed.
+        f'<line x1="{3 * step + 6}" y1="{line_y}" x2="{W}" y2="{line_y}" stroke="{accent}" stroke-opacity="0.7" '
+        f'stroke-width="1.5" stroke-dasharray="2 7" stroke-linecap="round"/>',
+    ]
+    for i, (when, where, what) in enumerate(TIMELINE):
+        x = i * step + 6
+        last = i == len(TIMELINE) - 1
+        parts.append(text(MONO_MED, when, 14, x - 6, line_y - 20, accent, tracking=0.1))
+        if last:
+            parts.append(f'<circle cx="{x}" cy="{line_y}" r="11" fill="{accent}" fill-opacity="0.2" class="halo"/>')
+        parts.append(
+            f'<circle cx="{x}" cy="{line_y}" r="5.5" fill="{accent if last else PALETTES[theme]["head_text"]}" '
+            f'fill-opacity="{1 if last else 0.85}"/>'
+        )
+        parts.append(text(SERIF, where, 30, x - 6, line_y + 50, ink))
+        parts.append(text(MONO, what, 12, x - 6, line_y + 74, ink, tracking=0.1, opacity=0.7))
+    style = (
+        ".halo{animation:breathe 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}"
+        "@keyframes breathe{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1.3)}}"
+    )
+    title = "Timeline: " + "; ".join(f"{a} {b}, {c.lower()}" for a, b, c in TIMELINE)
+    return svg(W, H, "".join(parts), title, style)
+
+
 SECTIONS = [
-    ("now", "01", "Now building"),
+    ("numbers", "01", "By the numbers"),
     ("work", "02", "Selected work"),
-    ("research", "03", "Research"),
-    ("experience", "04", "Experience"),
-    ("toolbox", "05", "Toolbox"),
-    ("offclock", "06", "Off the clock"),
+    ("experience", "03", "Path so far"),
+    ("activity", "04", "On GitHub"),
 ]
 
 PILLS = [("portfolio", "PORTFOLIO"), ("linkedin", "LINKEDIN"), ("resume", "RÉSUMÉ")]
 
 
 def main():
+    for old in OUT.glob("h-*.svg"):
+        old.unlink()
     for theme in PALETTES:
-        files = {f"banner-{theme}.svg": banner(theme), f"footer-{theme}.svg": footer(theme)}
+        files = {
+            f"banner-{theme}.svg": banner(theme),
+            f"footer-{theme}.svg": footer(theme),
+            f"numbers-{theme}.svg": numbers(theme),
+            f"timeline-{theme}.svg": timeline(theme),
+        }
         for slug, idx, title in SECTIONS:
             files[f"h-{slug}-{theme}.svg"] = heading(theme, idx, title)
         for slug, label in PILLS:
