@@ -24,23 +24,30 @@ from svgkit import (
 def banner(theme):
     p = PALETTES[theme]
     W, H = 1280, 420
-    pad = 64
+    # Text lines up with the page column, like the pills and strip below it.
+    pad = 6
     parts = []
 
+    # No panel of its own: the page's background shows through, so the banner
+    # reads as part of the profile. The hills fade out towards the text column
+    # and towards the bottom edge instead of being cut off by a frame.
     parts.append(
         "<defs>"
-        f'<radialGradient id="glow" cx="0.82" cy="0.18" r="0.7">'
-        f'<stop offset="0" stop-color="{p["accent"]}" stop-opacity="{0.12 if theme == "dark" else 0.08}"/>'
-        f'<stop offset="1" stop-color="{p["accent"]}" stop-opacity="0"/></radialGradient>'
-        f'<linearGradient id="fade" x1="0" x2="1" y1="0" y2="0">'
-        f'<stop offset="0" stop-color="{p["ink"]}" stop-opacity="1"/>'
-        f'<stop offset="0.42" stop-color="{p["ink"]}" stop-opacity="0"/></linearGradient>'
-        f'<clipPath id="card"><rect width="{W}" height="{H}" rx="18"/></clipPath>'
+        '<linearGradient id="fade-x" x1="0" x2="1" y1="0" y2="0">'
+        '<stop offset="0.12" stop-color="#fff" stop-opacity="0"/>'
+        '<stop offset="0.5" stop-color="#fff" stop-opacity="1"/>'
+        '<stop offset="0.88" stop-color="#fff" stop-opacity="1"/>'
+        '<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+        '<linearGradient id="fade-y" x1="0" x2="0" y1="0" y2="1">'
+        '<stop offset="0.8" stop-color="#fff" stop-opacity="1"/>'
+        '<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+        f'<mask id="hills-x" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">'
+        f'<rect width="{W}" height="{H}" fill="url(#fade-x)"/></mask>'
+        f'<mask id="hills-y" maskUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">'
+        f'<rect width="{W}" height="{H}" fill="url(#fade-y)"/></mask>'
         "</defs>"
     )
-    parts.append('<g clip-path="url(#card)">')
-    parts.append(f'<rect width="{W}" height="{H}" fill="{p["ink"]}"/>')
-    parts.append(f'<rect width="{W}" height="{H}" fill="url(#glow)"/>')
+    parts.append('<g mask="url(#hills-y)"><g mask="url(#hills-x)">')
 
     # Three ridges, far to near, each lower and denser, the way haze works over
     # real hills. The motes above them take the contribution-graph green.
@@ -55,8 +62,7 @@ def banner(theme):
         parts.append(
             f'<path class="{drift}" d="{ridge_path(pts, H + 4)}" fill="{colour}" fill-opacity="{op}"/>'
         )
-    # Let the hills dissolve before they reach the text column.
-    parts.append(f'<rect width="{W}" height="{H}" fill="url(#fade)"/>')
+    parts.append("</g></g>")
 
     # Motes drifting up off the hills.
     rnd = random.Random(42)
@@ -98,11 +104,6 @@ def banner(theme):
         f'<tspan fill="{p["muted"]}"> · M.S. CS, NORTHEASTERN &#8217;26</tspan></text>'
     )
 
-    parts.append("</g>")
-    parts.append(
-        f'<rect x="0.5" y="0.5" width="{W - 1}" height="{H - 1}" rx="17.5" fill="none" '
-        f'stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
-    )
 
     style = (
         ".mote{animation:rise linear infinite;transform-box:fill-box}"
@@ -248,9 +249,8 @@ def timeline(theme):
 
 
 SECTIONS = [
-    ("work", "01", "Selected work"),
-    ("experience", "02", "Path so far"),
-    ("activity", "03", "On GitHub"),
+    ("experience", "01", "Path so far"),
+    ("activity", "02", "On GitHub"),
 ]
 
 PILLS = [("portfolio", "PORTFOLIO"), ("linkedin", "LINKEDIN"), ("resume", "RÉSUMÉ")]
