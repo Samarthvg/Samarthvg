@@ -39,6 +39,8 @@ PALETTES = {
         # Contribution-graph greens, lightest to strongest.
         "graph": ("#0E4429", "#006D32", "#26A641", "#39D353"),
         "graph_empty": "#21262D",
+        # One hue for the weekly bars; bar height alone carries the count.
+        "bar": "#26A641",
     },
     "light": {
         "ink": "#F6F8FA",
@@ -52,6 +54,7 @@ PALETTES = {
         "head_accent": "#0969DA",
         "graph": ("#9BE9A8", "#40C463", "#30A14E", "#216E39"),
         "graph_empty": "#EFF2F5",
+        "bar": "#2DA44E",
     },
 }
 
