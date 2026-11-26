@@ -145,14 +145,16 @@ def pill(theme, label):
     W = int(text_w + arrow + 14 + 2 * 26)
     H = 48
     parts = [
-        f'<rect x="0.75" y="0.75" width="{W - 1.5}" height="{H - 1.5}" rx="{(H - 1.5) / 2}" '
-        f'fill="{p["ink"]}" stroke="{p["accent"]}" stroke-opacity="0.55" stroke-width="1.5"/>'
+        # Outline only, in the same hairline as the cards, so the links read as
+        # part of the page rather than as buttons shouting for attention.
+        f'<rect x="0.5" y="0.5" width="{W - 1}" height="{H - 1}" rx="{(H - 1) / 2}" '
+        f'fill="none" stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
     ]
     parts.append(text(MONO_MED, label, size, 26, 29, p["bone"], tracking=track))
     ax = 26 + text_w + 14
     parts.append(
         f'<path d="M{num(ax)} {H / 2 + 6}L{num(ax + 11)} {H / 2 - 5}M{num(ax + 2)} {H / 2 - 5}H{num(ax + 11)}V{H / 2 + 4}" '
-        f'fill="none" stroke="{p["accent"]}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'fill="none" stroke="{p["muted"]}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
     )
     return svg(W, H, "".join(parts), label)
 
@@ -251,6 +253,7 @@ def timeline(theme):
 SECTIONS = [
     ("experience", "01", "Path so far"),
     ("activity", "02", "On GitHub"),
+    ("listening", "03", "Listening"),
 ]
 
 PILLS = [("portfolio", "PORTFOLIO"), ("linkedin", "LINKEDIN"), ("resume", "RÉSUMÉ")]

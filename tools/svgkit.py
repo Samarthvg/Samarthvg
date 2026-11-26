@@ -160,9 +160,9 @@ def ridge_path(pts, floor):
 
 
 def card(p, w, h, radius=18):
-    """Background and hairline for a self-coloured panel, like the banner's."""
+    """A hairline outline with no fill, so the page's own background shows
+    through and the panel sits in the profile instead of on top of it."""
     return (
-        f'<rect width="{w}" height="{h}" rx="{radius}" fill="{p["ink"]}"/>'
         f'<rect x="0.5" y="0.5" width="{w - 1}" height="{h - 1}" rx="{radius - 0.5}" fill="none" '
         f'stroke="{p["line"]}" stroke-opacity="{p["line_op"]}"/>'
     )

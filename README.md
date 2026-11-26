@@ -21,4 +21,8 @@
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/activity-dark.svg"><img src="assets/activity-light.svg" width="100%" alt="GitHub contributions and languages, refreshed daily."></picture>
 
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/h-listening-dark.svg"><img src="assets/h-listening-light.svg" width="100%" alt="Listening"></picture>
+
+<a href="https://www.last.fm/user/Samarthvg"><picture><source media="(prefers-color-scheme: dark)" srcset="https://nowplaying.samarthg.workers.dev/card.svg?theme=dark"><img src="https://nowplaying.samarthg.workers.dev/card.svg?theme=light" width="100%" alt="What I'm listening to on Apple Music, via Last.fm"></picture></a>
+
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/footer-dark.svg"><img src="assets/footer-light.svg" width="100%" alt=""></picture>
