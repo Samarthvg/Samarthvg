@@ -17,7 +17,7 @@
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/timeline-dark.svg"><img src="assets/timeline-light.svg" width="100%" alt="2020 Charotar University, ML research intern. 2022–23 Simform, full stack developer. 2025–26 Cognitus, full stack intern. 2026 Northeastern, M.S. computer science."></picture>
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="assets/h-activity-dark.svg"><img src="assets/h-activity-light.svg" width="100%" alt="On GitHub"></picture>
+<!-- <picture><source media="(prefers-color-scheme: dark)" srcset="assets/h-activity-dark.svg"><img src="assets/h-activity-light.svg" width="100%" alt="On GitHub"></picture> -->
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="assets/activity-dark.svg"><img src="assets/activity-light.svg" width="100%" alt="GitHub contributions and languages, refreshed daily."></picture>
 
